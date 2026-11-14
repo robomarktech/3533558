@@ -1,0 +1,233 @@
+select *
+from products
+
+insert into products(
+    productCode, productName, productLine, productScale, ProductVendor, quantitylnStock, buyProce, MSRP)
+
+values ('tesla_6', 'Ciber Truck', 'Truck', '1:75', 'Ulimate Truck', '30', '65.00', '199.65');
+
+--Muestra el nombre del cliente en mayúsculas y la ciudad en minúsculas para estandarizar la vista.--
+SELECT 
+    UPPER(customerName) AS NombreMayusculas, 
+    LOWER(city) AS CiudadMinusculas
+FROM customers;
+--Une el nombre y el apellido del contacto en una sola columna separada por un espacio.--
+
+SELECT CONCAT(contactFirstName, ' ', contactLastName) AS ContactoCompleto 
+FROM customers;
+
+
+--Obtén solo los primeros 5 caracteres del código del producto.
+
+SELECT 
+    productCode,
+    SUBSTR(productCode, 1, 5) AS Primero_5_carcteres
+FROM products;
+
+-- Calcula el valor total facturado por cada producto en una orden multiplicando cantidad por precio.--
+
+   SELECT 
+    orderNumber,
+    productCode,
+    (quantityOrdered * priceEach) AS TotalFacturado
+FROM orderdetails;
+--- ver lo que contiene la tabla
+
+SELECT * FROM orders;
+
+----Si hubiera un error de sistema con precios negativos, ABS() fuerza el número a ser positivo. Calculamos la diferencia absoluta entre el precio sugerido (MSRP) y el precio de compra.--
+SELECT 
+    productName,
+    msrp,
+    buyprice,
+    ABS (msrp - buyprice) as RentabilidadODifereciaAbsoluta
+    from products
+ 
+    ---- Calcula exactamente cuántos días pasaron entre que el cliente hizo la orden y el momento en que se envió.
+    
+    
+    
+    
+    SELECT 
+    orderNumber,
+    orderDate,
+    shippedDate,
+    CAST(JULIANDAY(shippedDate) - JULIANDAY(orderDate) AS INTEGER) AS DiasEnvio
+FROM orders
+WHERE shippedDate IS NOT NULL; -- Filtra las que aún no se han enviado
+
+---Convierte el formato estándar de base de datos (YYYY-MM-DD) al formato tradicional (DD-MM-YYYY)
+
+SELECT 
+    orderDate AS FechaOriginal,
+    STRFTIME('%d-%m-%Y', orderDate) AS FechaFormatoTradicional
+FROM orders;
+
+---Obtén por separado el año y el mes de las fechas de pago.
+
+SELECT 
+    paymentDate,
+    STRFTIME('%Y', paymentDate) AS Anio,
+    STRFTIME('%m', paymentDate) AS Mes
+FROM payments;
+
+---oredr by
+select * from employees e ;
+
+select DISTINCT productLine
+from productlines
+
+select * from customers 
+
+select productLine As categoria
+avg (buyprice) AS precio_promedio
+from products p group by productLine 
+
+--- Having
+
+select productline as categoria,
+avg(buyprice) as precio_promedio
+from products p group by p.productLine having avg(buyprice) >50
+
+--- otro ejercicio having
+
+
+
+
+avg(buyprice) as precio_promedio
+from products p group by p.productLine having avg(buyprice) >50
+
+---Ejercicios Agregaci´on
+--1. ¿Cu´antos empleados en total trabajan en la compa˜n´ıa?
+select COUNT (*) from employees;
+
+--2. ¿Cu´antos clientes est´an registrados por cada pa´ıs?
+
+select country, count (*) 
+from customers
+group by country 
+---¿Cu´al es el precio de venta sugerido (MSRP) m´as alto y m´as bajo de todo el cat´alogo?
+select * from products;
+select 
+      max(MSRP) as Precio_mas_alto,
+      min(MSRP) as Precio_mas_bajo
+      from products
+      
+--4. ¿De cu´anto fue el cheque de mayor valor que se recibido en la historia de la empresa?
+select * from payments;
+select 
+max(amount) as Precio_mas_alto_en_la_historia
+from payments
+
+--5. ¿En qu´e fecha exacta se recibi´o el primer pedido (la orden m´as antigua) en la tienda?
+
+      select * from orderdetails
+     select 
+     min(orderDate) Primer_pedido
+      from orders
+      ---. ¿Cu´antas unidades de un mismo producto suele pedir un cliente en cada l´ınea de orden?
+      SELECT 
+      AVG(quantityOrdered) AS promedio_unidades
+      FROM orderdetails;
+
+   -- . Obt´en la lista de todos los clientes y ord´enelos alfab´eticamente por su nombre de la A a la Z.
+      SELECT * from customers
+      select *
+      FROM customers
+      ORDER BY customerName ASC;
+   
+   ---- . ¿Cu´al es el precio m´ınimo, m´aximo y promedio de los productos?, pero separado por cada ”L´ınea de Producto”. Adem´as, se debe ignorar las categor´ıas baratas (solo ver las que promedien m´as de 45 d´olares) y ordenar el reporte de la m´as cara a la m´as barata.
+      
+   SELECT 
+    productLine,
+    MIN(buyPrice) AS precio_minimo,
+    MAX(buyPrice) AS precio_maximo,
+    AVG(buyPrice) AS precio_promedio
+FROM products
+GROUP BY productLine
+HAVING AVG(buyPrice) > 45
+ORDER BY precio_promedio DESC;
+
+--Se necesita un reporte financiero que diga todo sobre los h´abitos de pago de cada cliente. Saber cu´antas veces ha pagado, cu´anto dinero ha dejado en total, cu´al es su pago promedio, y cu´ales han sido su pago m´as alto y el m´as bajo. Para enfocarse en clientes recurrentes, filtrar solo aquellos que tengan m´as de 2 pagos registrados.
+SELECT 
+    customerNumber,
+    COUNT(*) AS veces_pagado,
+    SUM(amount) AS total_dinero,
+    AVG(amount) AS pago_promedio,
+    MAX(amount) AS pago_mas_alto,
+    MIN(amount) AS pago_mas_bajo
+FROM payments
+GROUP BY customerNumber
+HAVING COUNT(*) > 2
+ORDER BY total_dinero DESC;
+
+--. Evaluar la rentabilidad y el volumen de las ´ordenes. Por cada orden de venta, contar cu´antos tipos de productos diferentes incluye, sumar el total de piezas f´ısicas compradas, y ver el precio promedio, m´aximo y m´ınimo de los art´ıculos de esa orden. Solo interesan las ´ordenes mayoristas, es decir, aquellas donde la suma total de unidades supere las 500 piezas.
+
+SELECT 
+    orderNumber,
+    COUNT(DISTINCT productCode) AS tipos_productos,
+    SUM(quantityOrdered) AS total_piezas,
+    AVG(priceEach) AS precio_promedio,
+    MAX(priceEach) AS precio_maximo,
+    MIN(priceEach) AS precio_minimo
+FROM orderdetails
+GROUP BY orderNumber
+HAVING SUM(quantityOrdered) > 500
+ORDER BY total_piezas DESC;
+
+-- 2 Ejercicios JOIN
+--1. Inventario que no se est´a vendiendo
+SELECT 
+    p.productCode,
+    p.productName,
+    p.productLine,
+    p.quantityInStock,
+    p.buyPrice
+FROM products p
+LEFT JOIN orderdetails od ON p.productCode = od.productCode
+WHERE od.productCode IS NULL;
+
+--2. Identificar a los clientes que est´an registrados en la base de datos, pero que jam´as han hecho un pago (quiz´as cancelaron la orden antes de pagar o es un registro basura).
+
+SELECT 
+    c.customerNumber,
+    c.customerName,
+    c.country
+FROM customers c
+LEFT JOIN payments p ON c.customerNumber = p.customerNumber
+WHERE p.customerNumber IS NULL;
+
+--3. Reconstruir una factura completa cruzando la orden (orders), el detalle de lo que se compr´o (orderdetails) y el nombre del producto (products). (Ver el n´umero de orden, la fecha, el nombre real del auto comprado, la cantidad y el precio cobrado.)
+
+SELECT 
+    o.orderNumber,
+    o.orderDate,
+    p.productName,
+    od.quantityOrdered,
+    od.priceEach
+FROM orders o
+INNER JOIN orderdetails od ON o.orderNumber = od.orderNumber
+INNER JOIN products p ON od.productCode = p.productCode
+ORDER BY o.orderNumber ASC;
+
+--4. El equipo de marketing quiere lanzar una campa˜na publicitaria separada para cada categor´ıa de producto en cada una de las ciudades donde hay oficina. Necesitan una lista de todas las combinaciones posibles para asignar presupuestos.
+
+SELECT 
+    pl.productLine AS categoria_producto,
+    o.city AS ciudad_oficina
+FROM productlines pl
+CROSS JOIN offices o
+ORDER BY pl.productLine, o.city;
+
+--5. El equipo de log´ıstica quiere un reporte de las ´ordenes que ya fueron enviadas (Shipped). Necesitan saber el nombre del cliente y desde qu´e ciudad opera la oficina del vendedor que cerr´o ese trato.
+SELECT 
+    o.orderNumber,
+    o.status,
+    c.customerName AS cliente,
+    ofc.city AS ciudad_oficina_vendedor
+FROM orders o
+INNER JOIN customers c ON o.customerNumber = c.customerNumber
+INNER JOIN employees e ON c.salesRepEmployeeNumber = e.employeeNumber
+INNER JOIN offices ofc ON e.officeCode = ofc.officeCode
+WHERE o.status = 'Shipped'
+ORDER BY o.orderNumber ASC;
